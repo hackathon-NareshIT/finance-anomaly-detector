@@ -75,6 +75,7 @@ export default function Signup() {
     const handleSubmit = async () => {
         if (!email || !password || !confirm) { setError('Please fill in all fields.'); return }
         if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+        if (new TextEncoder().encode(password).length > 72) { setError('Password is too long (max 72 characters).'); return }
         if (password !== confirm) { setError('Passwords do not match.'); return }
         setLoading(true)
         setError('')
