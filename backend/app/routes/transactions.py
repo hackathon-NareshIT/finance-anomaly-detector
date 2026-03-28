@@ -9,7 +9,7 @@ from app.services.explainer import enrich_with_reasons
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
-MAX_FILE_SIZE = 5 * 1024 * 1024  
+MAX_FILE_SIZE = 5 * 1024 * 1024
 
 
 @router.post("/upload")
@@ -18,16 +18,18 @@ def upload_csv(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Upload a CSV, run anomaly detection, save result to PostgreSQL."""
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
+    filename_lower = file.filename.lower()
+    if not (filename_lower.endswith(".csv") or filename_lower.endswith(".pdf")):
+        raise HTTPException(status_code=400, detail="Only CSV or PDF files are accepted.")
 
     content = file.file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large. Max 5MB.")
+    if len(content) > 10 * 1024 * 1024:  
+        raise HTTPException(status_code=400, detail="File too large. Max 10MB.")
+
+    file_ext = "pdf" if filename_lower.endswith(".pdf") else "csv"
 
     try:
-        result = analyze(content)
+        result = analyze(content, file_extension=file_ext)
         result = enrich_with_reasons(result)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
