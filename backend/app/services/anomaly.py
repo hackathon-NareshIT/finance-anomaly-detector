@@ -64,8 +64,7 @@ def infer_category(merchant):
     return "Other"
 
 
-# ── CSV Parsing ───────────────────────────────────────────────────
-
+ 
 def is_phonepe_format(df):
     cols = [c.lower().strip() for c in df.columns]
     return (
@@ -159,13 +158,6 @@ def parse_csv(file_bytes):
     else:
         return parse_generic_csv(raw)
 
-
-# ── PDF Parsing ───────────────────────────────────────────────────
-
-# This regex matches the EXACT format pdfplumber extracts from PhonePe PDFs:
-# "Mar 28, 2026 Paid to Subhasish Odisha DEBIT ₹50"
-# All on ONE line: date + description + type + amount
-
 PHONEPE_LINE_RE = re.compile(
     r"^((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4})\s+"
     r"(.+?)\s+(DEBIT|CREDIT)\s+₹([\d,]+(?:\.\d{1,2})?)$"
@@ -254,7 +246,7 @@ def parse_pdf(file_bytes):
     1. Try PhonePe single-line text parser first (handles your PDF perfectly)
     2. Fall back to table extraction for other bank PDFs
     """
-    # Strategy 1 — PhonePe text-based (confirmed working on your PDF)
+    
     try:
         result = parse_phonepe_pdf(file_bytes)
         if len(result) >= 3:
@@ -266,7 +258,7 @@ def parse_pdf(file_bytes):
     else:
         phonepe_error = ""
 
-    # Strategy 2 — Generic bank PDF table extraction
+    
     try:
         result = parse_generic_bank_pdf(file_bytes)
         if len(result) >= 3:
@@ -281,7 +273,7 @@ def parse_pdf(file_bytes):
     )
 
 
-# ── Feature Engineering ───────────────────────────────────────────
+
 
 def engineer_features(df):
     df = df.copy()
@@ -298,7 +290,7 @@ def engineer_features(df):
     return df
 
 
-# ── Isolation Forest ──────────────────────────────────────────────
+
 
 def run_model(df):
     df = engineer_features(df)
@@ -323,9 +315,6 @@ def run_model(df):
     df["anomaly_score"] = normalized
     df["is_anomaly"]    = model.predict(X) == -1
     return df
-
-
-# ── Entry Point ───────────────────────────────────────────────────
 
 def analyze(file_bytes, file_extension="csv"):
     if file_extension == "pdf":
