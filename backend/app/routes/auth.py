@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 from app.config import settings
 from app.database import get_db
@@ -12,18 +12,16 @@ from app.models_db import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
-def _truncate(password: str) -> str:
-    """bcrypt silently truncates at 72 bytes; passlib raises ValueError on 3.12+. Truncate explicitly."""
-    return password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(_truncate(password))
+    """Hash password using bcrypt directly (avoids passlib Python 3.12+ crash)."""
+    pwd_bytes = password.encode('utf-8')[:72]  # bcrypt max is 72 bytes
+    return bcrypt.hashpw(pwd_bytes, bcrypt.gensalt()).decode('utf-8')
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(_truncate(plain), hashed)
+    pwd_bytes = plain.encode('utf-8')[:72]
+    return bcrypt.checkpw(pwd_bytes, hashed.encode('utf-8'))
 
 def create_access_token(data: dict) -> str:
     payload = data.copy()

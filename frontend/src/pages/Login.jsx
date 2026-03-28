@@ -138,8 +138,9 @@ export default function Login() {
 
                 {error && <div style={styles.error}>{error}</div>}
 
-                <label style={styles.label}>Email</label>
+                <label style={styles.label} htmlFor="login-email">Email</label>
                 <input
+                    id="login-email"
                     style={styles.input}
                     type="email"
                     placeholder="you@example.com"
@@ -149,7 +150,6 @@ export default function Login() {
                     onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                     onBlur={e => e.target.style.borderColor = 'var(--border)'}
                 />
-
                 <label style={styles.label}>Password</label>
                 <input
                     style={styles.input}

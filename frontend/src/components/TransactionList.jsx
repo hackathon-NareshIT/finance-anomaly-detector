@@ -10,9 +10,10 @@ const CAT_ICONS = {
 }
 
 function ScoreBadge({ score, isAnomaly }) {
-    const color = score >= 0.7 ? 'var(--danger)' : score >= 0.4 ? 'var(--warning)' : 'var(--success)'
-    const bg = score >= 0.7 ? 'var(--danger-bg)' : score >= 0.4 ? 'var(--warning-bg)' : 'var(--success-bg)'
-    const label = score >= 0.7 ? 'High risk' : score >= 0.4 ? 'Watch' : 'Normal'
+    const safeScore = score ?? 0
+    const color = safeScore >= 0.7 ? 'var(--danger)' : safeScore >= 0.4 ? 'var(--warning)' : 'var(--success)'
+    const bg = safeScore >= 0.7 ? 'var(--danger-bg)' : safeScore >= 0.4 ? 'var(--warning-bg)' : 'var(--success-bg)'
+    const label = safeScore >= 0.7 ? 'High risk' : safeScore >= 0.4 ? 'Watch' : 'Normal'
     return (
         <span style={{
             fontSize: '11px',
@@ -24,8 +25,7 @@ function ScoreBadge({ score, isAnomaly }) {
             fontFamily: 'var(--mono)',
             whiteSpace: 'nowrap',
         }}>
-            {label} {score.toFixed(2)}
-        </span>
+            {label} {safeScore.toFixed(2)}        </span>
     )
 }
 
@@ -36,6 +36,10 @@ function TransactionRow({ txn }) {
         <div style={{ marginBottom: '6px' }}>
             <div
                 onClick={() => txn.is_anomaly && setOpen(o => !o)}
+                onKeyDown={(e) => txn.is_anomaly && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setOpen(o => !o))}
+                tabIndex={txn.is_anomaly ? 0 : undefined}
+                role={txn.is_anomaly ? 'button' : undefined}
+                aria-expanded={txn.is_anomaly ? open : undefined}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -49,8 +53,7 @@ function TransactionRow({ txn }) {
                     transition: 'border-color 0.15s, background 0.15s',
                 }}
                 onMouseEnter={e => txn.is_anomaly && (e.currentTarget.style.background = 'var(--bg3)')}
-                onMouseLeave={e => e.currentTarget.style.background = 'var(--bg2)'}
-            >
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--bg2)'}            >
                 <div style={{
                     width: '36px', height: '36px', borderRadius: '10px',
                     background: 'var(--bg3)', border: '1px solid var(--border)',
@@ -72,37 +75,38 @@ function TransactionRow({ txn }) {
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{
                         fontWeight: '600', fontSize: '14px',
-                        color: txn.anomaly_score >= 0.7 ? 'var(--danger)' : 'var(--text)',
                         fontFamily: 'var(--mono)', marginBottom: '4px',
                     }}>
-                        ₹{txn.amount.toLocaleString('en-IN')}
+                        ₹{(txn.amount ?? 0).toLocaleString('en-IN')}
                     </p>
-                    <ScoreBadge score={txn.anomaly_score} isAnomaly={txn.is_anomaly} />
-                </div>
-
-                {txn.is_anomaly && (
-                    <div style={{ fontSize: '12px', color: 'var(--text3)', flexShrink: 0, marginLeft: '4px' }}>
-                        {open ? '▲' : '▼'}
-                    </div>
-                )}
+                <ScoreBadge score={txn.anomaly_score} isAnomaly={txn.is_anomaly} />
             </div>
 
-            {open && txn.reason && (
-                <div style={{
-                    margin: '2px 0 0 4px',
-                    padding: '10px 14px',
-                    background: 'var(--warning-bg)',
-                    border: '1px solid var(--warning)',
-                    borderLeft: '3px solid var(--warning)',
-                    borderRadius: '0 8px 8px 0',
-                    fontSize: '13px',
-                    color: 'var(--text2)',
-                    lineHeight: '1.6',
-                }}>
-                    ⚠ {txn.reason}
+            {txn.is_anomaly && (
+                <div style={{ fontSize: '12px', color: 'var(--text3)', flexShrink: 0, marginLeft: '4px' }}>
+                    {open ? '▲' : '▼'}
                 </div>
             )}
         </div>
+
+            {
+        open && txn.reason && (
+            <div style={{
+                margin: '2px 0 0 4px',
+                padding: '10px 14px',
+                background: 'var(--warning-bg)',
+                border: '1px solid var(--warning)',
+                borderLeft: '3px solid var(--warning)',
+                borderRadius: '0 8px 8px 0',
+                fontSize: '13px',
+                color: 'var(--text2)',
+                lineHeight: '1.6',
+            }}>
+                ⚠ {txn.reason}
+            </div>
+        )
+    }
+        </div >
     )
 }
 

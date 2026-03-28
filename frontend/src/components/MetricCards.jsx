@@ -6,38 +6,44 @@ const card = {
 }
 
 export default function MetricCards({ data }) {
+
+    if (!data) return null
+
+    const breakdown = data.category_breakdown || {}
+
+    const entries = Object.entries(breakdown)
+
+    const topCategory = entries.length
+        ? entries.sort((a, b) => b[1] - a[1])[0]
+        : null
+
     const metrics = [
         {
             label: 'Total spent',
-            value: `₹${data.total_spent.toLocaleString('en-IN')}`,
-            sub: `${data.total_transactions} transactions`,
+            value: `₹${(data.total_spent || 0).toLocaleString('en-IN')}`,
+            sub: `${data.total_transactions || 0} transactions`,
             color: 'var(--text)',
         },
         {
             label: 'Avg transaction',
-            value: `₹${Math.round(data.avg_transaction).toLocaleString('en-IN')}`,
+            value: `₹${Math.round(data.avg_transaction || 0).toLocaleString('en-IN')}`,
             sub: 'Per transaction',
             color: 'var(--text)',
         },
         {
             label: 'Anomalies flagged',
-            value: data.anomaly_count,
-            sub: `${((data.anomaly_count / data.total_transactions) * 100).toFixed(1)}% of transactions`,
+            value: data.anomaly_count || 0,
+            sub: data.total_transactions
+                ? `${((data.anomaly_count / data.total_transactions) * 100).toFixed(1)}% of transactions`
+                : '0%',
             color: data.anomaly_count > 0 ? 'var(--danger)' : 'var(--success)',
         },
         {
             label: 'Top category',
-            value: (() => {
-                const entries = Object.entries(data.category_breakdown)
-                if (!entries.length) return '—'
-                return entries.sort((a, b) => b[1] - a[1])[0][0]
-            })(),
-            sub: (() => {
-                const entries = Object.entries(data.category_breakdown)
-                if (!entries.length) return ''
-                const top = entries.sort((a, b) => b[1] - a[1])[0]
-                return `₹${Math.round(top[1]).toLocaleString('en-IN')} spent`
-            })(),
+            value: topCategory ? topCategory[0] : '—',
+            sub: topCategory
+                ? `₹${Math.round(topCategory[1]).toLocaleString('en-IN')} spent`
+                : '',
             color: 'var(--accent)',
         },
     ]
@@ -57,7 +63,9 @@ export default function MetricCards({ data }) {
                     <p style={{ fontSize: '22px', fontWeight: '600', color: m.color, marginBottom: '3px' }}>
                         {m.value}
                     </p>
-                    <p style={{ fontSize: '12px', color: 'var(--text2)' }}>{m.sub}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text2)' }}>
+                        {m.sub}
+                    </p>
                 </div>
             ))}
         </div>

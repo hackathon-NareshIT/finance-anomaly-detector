@@ -1,4 +1,3 @@
-import pandas as pd
 
 
 def generate_reason(row: dict, all_transactions: list) -> str:
@@ -24,9 +23,9 @@ def generate_reason(row: dict, all_transactions: list) -> str:
             reasons.append(f"2× higher than your usual {category.lower()} spend")
 
     all_amounts = [t["amount"] for t in all_transactions]
-    overall_avg = sum(all_amounts) / len(all_amounts)
+    overall_avg = sum(all_amounts) / len(all_amounts) if all_amounts else 0
     overall_ratio = amount / overall_avg if overall_avg > 0 else 1
-
+    
     if overall_ratio >= 5 and not reasons:
         reasons.append(f"Very large transaction — {overall_ratio:.1f}× your overall average spend")
 

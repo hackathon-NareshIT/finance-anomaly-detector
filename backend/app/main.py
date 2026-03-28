@@ -4,6 +4,7 @@ from app.routes import auth, transactions
 from app.database import engine
 from app import models_db
 
+# Create DB tables
 models_db.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -12,14 +13,16 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# CORS (for frontend access)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # OK for hackathon
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Routes
 app.include_router(auth.router)
 app.include_router(transactions.router)
 
@@ -32,4 +35,3 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
-
