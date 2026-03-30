@@ -39,21 +39,30 @@ def decode_token(token: str) -> dict:
 
 @router.post("/signup", response_model=TokenResponse)
 def signup(body: SignupRequest, db: Session = Depends(get_db)):
+    print(f"DEBUG: Signup request for email: {body.email}")
     existing = db.query(User).filter(User.email == body.email).first()
     if existing:
+        print(f"DEBUG: Signup failed - email {body.email} already exists")
         raise HTTPException(status_code=400, detail="Email already registered.")
 
     if len(body.password) < 6:
+        print(f"DEBUG: Signup failed - password too short")
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
 
-    user = User(
-        email=body.email,
-        hashed_password=hash_password(body.password),
-        role="user",
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        user = User(
+            email=body.email,
+            hashed_password=hash_password(body.password),
+            role="user",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        print(f"DEBUG: Signup successful for user ID: {user.id}")
+    except Exception as e:
+        print(f"DEBUG: Signup database error: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     token = create_access_token({"sub": str(user.id), "email": user.email, "role": user.role})
     return TokenResponse(access_token=token, user_id=str(user.id), email=user.email)
@@ -61,10 +70,18 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)):
+    print(f"DEBUG: Login attempt for email: {body.email}")
     user = db.query(User).filter(User.email == body.email).first()
-    if not user or not verify_password(body.password, user.hashed_password):
+    
+    if not user:
+        print(f"DEBUG: Login failed - user not found for email: {body.email}")
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+        
+    if not verify_password(body.password, user.hashed_password):
+        print(f"DEBUG: Login failed - password mismatch for email: {body.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
+    print(f"DEBUG: Login successful for user ID: {user.id}")
     token = create_access_token({"sub": str(user.id), "email": user.email, "role": user.role})
     return TokenResponse(access_token=token, user_id=str(user.id), email=user.email)
 
