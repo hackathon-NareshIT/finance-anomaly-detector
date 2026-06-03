@@ -5,6 +5,10 @@ Millions of people in India lose money to unnoticed fraudulent transactions, bil
 
 A full-stack web app that detects unusual spending patterns in personal finance data using Isolation Forest ML. Supports PhonePe CSV/PDF exports and generic bank statement formats.
 
+## Live Link
+Link - https://finance-anomaly-detector.vercel.app
+app tiyari karili
+
 # Project Structure
 ```
 finance-anomaly-detector/
