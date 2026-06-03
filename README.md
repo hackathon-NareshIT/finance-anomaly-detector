@@ -7,7 +7,6 @@ A full-stack web app that detects unusual spending patterns in personal finance 
 
 ## Live Link
 Link - https://finance-anomaly-detector.vercel.app
-app tiyari karili
 
 # Project Structure
 ```
